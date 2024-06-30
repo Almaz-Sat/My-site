@@ -1,11 +1,22 @@
+<script>
+  const nav = [
+    {title:"Обо мне",href:"/about",show:true},
+    {title:"Блог",href:"/blog",show:true},
+    {title:"Портфолио",href:"/projects",show:true},
+    {title:"Контакты",href:"/contact",show:true},
+    ]
+</script>
+
 <nav>
   <div class="nav-container">
     <a href="/" class="nav-logo" title="Back to Homepage">Almaz</a>
     <div class="nav-links">
-      <a href="/about" class="link">Обо мне</a>
-      <a href="/blog" class="link">Блог</a>
-      <a href="/projects" class="link">Портфолио</a>
-      <a href="/contact" class="link">Контакты</a>
+      {#each nav as link}
+      {#if link.show}
+        <a href={link.href} class="link">{link.title}</a>
+      {/if}
+      {/each}
+      
     </div>
   </div>
 </nav>
