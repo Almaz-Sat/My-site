@@ -1,11 +1,15 @@
 <script>
-  // @ts-nocheck
+// @ts-nocheck
 
-  import Store from "./components/Store.svelte";
+  import {productsApi} from  './api/api.js'
+  import {onMount} from 'svelte'
+
   let data = [];
-  $: {
-    console.log(data);
-  }
+
+  onMount(async()=>{
+    data= await productsApi();
+    console.log(data)
+  })
 </script>
 
 <svelte:head>
@@ -13,7 +17,7 @@
 </svelte:head>
 <h1 class="title">Список Товаров</h1>
 
-<Store bind:data />
+<!-- <Store bind:data /> -->
 
 {#if data.length > 0}
   <div class="container">
