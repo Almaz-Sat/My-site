@@ -22,20 +22,23 @@
     todos = [...todos, obj];
     console.log("add", todos);
     newItem = "";
-    saveTodos()
+    saveTodos();
   }
 
   function complete(todo) {
     todo.isComplete = !todo.isComplete;
     todos = todos;
-    saveTodos()
+    saveTodos();
   }
 
   function remove(todo) {
     todos = todos.filter((e) => e.id !== todo.id);
-    saveTodos()
+    saveTodos();
   }
 </script>
+<svelte:head>
+  <title>Todo</title>
+</svelte:head>
 
 <h1>{title}</h1>
 <main>
