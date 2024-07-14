@@ -1,7 +1,12 @@
+// @ts-nocheck
 const API_URL = "https://fakestoreapi.com/products";
-export const productsApi = async () => {
+export const productsApi = async (id = undefined) => {
   try {
-    const response = await fetch(API_URL);
+    let url = API_URL;
+    if (id) {
+      url = `${API_URL}/${id}`
+    }
+    const response = await fetch(url);
     const isOK = response.ok;
     if (!isOK) {
       console.error("Error in request", response);
