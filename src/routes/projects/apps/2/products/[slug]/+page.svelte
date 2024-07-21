@@ -1,10 +1,10 @@
 <script>
-// @ts-nocheck
+  // @ts-nocheck
 
   export let data;
   $: hasData = Object.keys(data).length > 0;
-  import Rating from "./Rating.svelte";
-  // TODO 1 сделать звезды через svg
+  import StarRating from "../../components/starRating.svelte";
+
   const rating = data.rating.rate;
   let loopRating = rating;
   const ratingArray = [];
@@ -12,10 +12,9 @@
     if (loopRating >= 1) {
       ratingArray.push("100%");
       loopRating -= 1;
-    } else if(loopRating<=0){
+    } else if (loopRating <= 0) {
       ratingArray.push("0%");
-    }
-     else if (loopRating < 1) {
+    } else if (loopRating < 1) {
       let num = Number(String(rating).split(".")[1]) * 10;
       // @ts-ignore
       num = num.toString() + "%";
@@ -37,7 +36,7 @@
       <p class="rating">
         {rating}
         {#each ratingArray as item}
-          <Rating rating={item}/>
+          <StarRating rating={item} />
         {/each}
       </p>
     </div>

@@ -3,8 +3,9 @@
 
   import { onMount } from "svelte";
   import { movies } from "./data";
+  import Modal from "../../../../components/modal/Modal.svelte";
 
-  // TODO 2  showWarningMessage, showWinGameModal, resetStyles (не влазия в DOM) [уйти от DOM]
+  // TODO 1  showWarningMessage, showWinGameModal, resetStyles (не влазия в DOM) [уйти от DOM]
 
   // refs
   let modal;
@@ -13,14 +14,23 @@
   let movieImage;
   let modalContent;
 
+  // TODO remove
+  const IS_DEV_MODE = true;
+
   //variables
   let guessInputValue;
   let score;
   let currentMovieIndex;
-  let warningShown = false;
+  let movieImageSrc;
 
+  let correctAnswer = false;
+  let notCorrectAnswer = false;
+
+  let warningShown = false;
   let isGameOver = false;
   let isShowModal = false;
+  let isWin = false;
+  let isAnimation = false;
 
   onMount(() => {
     setTimeout(
@@ -28,23 +38,11 @@
         console.log(modal, guessInput, scoreBoard, movieImage, modalContent),
       1000
     );
-    preloadImages();
     startGame();
   });
-  
-
-  
-
-  function preloadImages() {
-    movies.forEach((movie) => {
-      const img = new Image();
-      img.src = movie.image;
-    });
-  }
 
   function startGame() {
     score = 0;
-    updateScore();
     currentMovieIndex = 0;
     getNextMovie();
   }
@@ -52,7 +50,7 @@
   //! Function to get a random movie
   function getNextMovie() {
     const currentMovie = movies[currentMovieIndex];
-    movieImage.src = currentMovie.image;
+    movieImageSrc = currentMovie.image;
   }
 
   //! Function to check the user's guess
@@ -61,32 +59,28 @@
     const currentMovie = movies[currentMovieIndex];
 
     if (userGuess === currentMovie.name.toLowerCase()) {
-      movieImage.style.boxShadow = "-1px 1px 25px 14px #52ffa880";
-      movieImage.style.outline = "3px solid #52ffa9";
+      correctAnswer = true;
 
       setTimeout(() => {
         score++;
-        updateScore();
         currentMovieIndex++;
         guessInputValue = "";
         resetStyles();
-        scoreBoard.classList.add("animation");
+        isAnimation = true;
 
         if (score < movies.length) {
           getNextMovie();
         } else {
-          showWinGameModal();
+          isWin = true;
+          isShowModal = true;
         }
       }, 800);
     } else if (userGuess === "") {
-      if (!warningShown) {
-        showWarningMessage();
-        warningShown = true;
-      }
+      warningShown = true;
+      isShowModal = true;
     } else {
-      movieImage.style.boxShadow = "-1px 1px 25px 16px #a20927";
-      movieImage.style.outline = "3px solid #a20927";
-      scoreBoard.classList.remove("animation");
+      notCorrectAnswer = true;
+      isAnimation = false;
 
       if (!warningShown) {
         currentMovieIndex++;
@@ -96,35 +90,6 @@
     }
   }
 
-  //! Function to update the score display
-  function updateScore() {
-    scoreBoard.textContent = `Score: ${score}`;
-  }
-
-  //! Function to show the warning message
-  function showWarningMessage() {
-    modalContent.innerHTML = `
-      <p class="message">Please enter a movie name! 👀</p>
-      <button class="btn" onclick="closeModal()">Close</button>
-    `;
-
-    modal.style.display = "flex";
-    // document.addEventListener("keyup", closeModalOnEnter);
-  }
-
-  //! Function to show the modal when the user win the game
-  function showWinGameModal() {
-    modalContent.innerHTML = `
-      <p class="message">You won the game! 🎉</p>
-      <p>Total Score: ${score}</p>
-      <button class="btn" onclick="closeModal()">Close</button>
-    `;
-
-    modal.style.display = "flex";
-    scoreBoard.classList.remove("animation");
-    // document.addEventListener("keyup", closeModalOnEnter);
-  }
-
   //! Function to close the modal on Enter key press
   function closeModalOnEnter(e) {
     if (e.key === "Enter" && modal.style.display === "flex") {
@@ -132,7 +97,6 @@
       modalContent.innerHTML = "";
       guessInputValue = "";
       resetStyles();
-      // document.removeEventListener("keyup", closeModalOnEnter);
 
       if (!warningShown) {
         startGame();
@@ -145,6 +109,10 @@
   //! Function to close the modal by clicking "OK" button
   function closeModal() {
     isShowModal = false;
+    warningShown = false;
+    isGameOver = false;
+    isWin = false;
+
     guessInputValue = "";
     resetStyles();
     // document.removeEventListener("keyup", closeModalOnEnter);
@@ -156,13 +124,6 @@
     }
   }
 
-  //! Event listener for the Enter key to automatically check the guess
-  // document.addEventListener("keyup", function (e) {
-  //   if (e.key === "Enter" && modal.style.display !== "flex") {
-  //     checkGuess();
-  //   }
-  // });
-
   //! Function to focus on input
   function focusOnInput() {
     guessInput.focus();
@@ -170,17 +131,9 @@
 
   //! Function to reset the styles
   function resetStyles() {
-    movieImage.style.boxShadow = "";
-    movieImage.style.outline = "";
+    correctAnswer = false;
+    notCorrectAnswer = false;
   }
-
-  //! Get the cursor position in the input
-  // guessInput.addEventListener("keyup", (e) => {
-  //   console.log("Caret at: ", e.target.selectionStart);
-  // });
-
-  //! Start the game when the page loads
-  // window.onload = startGame;
 </script>
 
 <svelte:head>
@@ -188,8 +141,17 @@
 </svelte:head>
 <div class="game-container">
   <h1>Guess the Movie</h1>
-  <div id="score" bind:this={scoreBoard}>Score: 0</div>
-  <img id="movieImage" src="" alt="Movie Poster" bind:this={movieImage} />
+  <div id="score" class:animation={isAnimation} bind:this={scoreBoard}>
+    Score: {score}
+  </div>
+  <img
+    id="movieImage"
+    src={movieImageSrc}
+    alt="Movie Poster"
+    bind:this={movieImage}
+    class:correctAnswer
+    class:notCorrectAnswer
+  />
   <div class="input-box">
     <form action="" on:submit|preventDefault={checkGuess}>
       <input
@@ -203,6 +165,27 @@
     </form>
   </div>
 </div>
+<Modal isShow={isShowModal}>
+  <div class="header">
+    {#if isGameOver || IS_DEV_MODE}
+      <p class="message">Game Over! 😔</p>
+    {:else if isWin}
+      <p class="message">You won the game! 🎉</p>
+    {/if}
+  </div>
+  <div slot="body">
+    {#if isGameOver || IS_DEV_MODE}
+      <p>Total Score: {score}</p>
+    {:else if warningShown}
+      <p class="message">Please enter a movie name! 👀</p>
+    {:else if isWin}
+      <p>Total Score: {score}</p>
+    {/if}
+  </div>
+  <div slot="footer">
+    <button class="btn" on:click={closeModal}>Close</button>
+  </div>
+</Modal>
 
 <div
   id="gameOverModal"
@@ -211,15 +194,20 @@
   bind:this={modal}
 >
   <div class="modal-content" bind:this={modalContent}>
-    {#if isGameOver}
+    {#if isGameOver || IS_DEV_MODE}
       <p class="message">Game Over! 😔</p>
+      <p>Total Score: {score}</p>
+    {:else if warningShown}
+      <p class="message">Please enter a movie name! 👀</p>
+    {:else if isWin}
+      <p class="message">You won the game! 🎉</p>
       <p>Total Score: {score}</p>
     {/if}
     <button class="btn" on:click={closeModal}>Close</button>
   </div>
 </div>
 
-<style>
+<style lang="scss">
   @import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap");
 
   :root {
@@ -437,6 +425,14 @@
 
   .animation {
     animation: up-down 3s linear infinite forwards;
+  }
+  .correctAnswer {
+    box-shadow: -1px 1px 25px 14px #52ffa880;
+    outline: 3px solid #52ffa9;
+  }
+  .notCorrectAnswer {
+    box-shadow: -1px 1px 25px 16px #a20927;
+    outline: 3px solid #a20927;
   }
 
   @keyframes up-down {
